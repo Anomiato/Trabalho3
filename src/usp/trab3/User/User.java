@@ -1,7 +1,7 @@
-
-
 package usp.trab3.User;
 
+import java.util.Calendar;
+import java.util.Date;
 import java.util.List;
 
 /**
@@ -17,6 +17,7 @@ public class User {
     int DateLimit; // dias maximos para cada emprestimo
 
     int BookLoan; // quantidade de livros pedidos
+
     /**
      * Construtor da classe User
      * @param name nome do usuário
@@ -80,8 +81,6 @@ public class User {
         result.append(DateLimit);
         result.append(",");
         result.append(BookLoan);
-        result.append("\n");
-
         return result;
     }
 
@@ -109,5 +108,32 @@ public class User {
 
     public String getName() {
         return Name;
+    }
+
+    /**
+     * Recebe uma data e volta uma data somada a data maxima permitida pelo tipo de usuario
+     * @param loanDate
+     * @return
+     */
+    public Date returnDate(Date loanDate) {
+
+        Calendar cal=Calendar.getInstance();
+        cal.setTime(loanDate);
+        cal.add(Calendar.DATE, DateLimit);
+        Date newDate = cal.getTime();
+        return newDate;
+    }
+
+    /**
+     * Verifica se o usuario ja estourou o limite de livros
+     * @return
+     */
+    public boolean loanTry() {
+        if(this.BookLoan<this.BookLimit) {
+            BookLoan++;
+            return true;
+        }
+        else
+            return false;
     }
 }

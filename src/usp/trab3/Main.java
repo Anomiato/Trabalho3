@@ -1,6 +1,7 @@
 package usp.trab3;
 
 import usp.trab3.Book.Book;
+import usp.trab3.Book.Loan;
 import usp.trab3.FileOperations.FileOperations;
 import usp.trab3.User.User;
 
@@ -37,6 +38,7 @@ public class Main {
             //
             // chamo a função que gera  arquivo de atrasos
             //
+            Loan.testeAtraso(DataAtual);
 
             Main.Loop(); // loop do programa principal/
 
@@ -53,7 +55,7 @@ public class Main {
      * Função que vai ter o loop do programa junto com o menu inicial
      * @throws Exception
      */
-    private static void Loop() throws Exception {
+    private static void Loop() {
 
         while(true) {
             System.out.print("\n\n\n\n\n" +
@@ -71,16 +73,17 @@ public class Main {
             );
             System.out.println("Digite a Opção desejada: ");
             BufferedReader br = new BufferedReader(new InputStreamReader(System.in));
-            int op = Integer.parseInt(br.readLine());
+            int op = 0;
+             try { op = Integer.parseInt(br.readLine()); } catch(IOException e) { System.exit(-1);}
 
             switch(op) {
                 case 1: // cadastro de usuário
                     System.out.println("Opção escolhida: " + op);
-                    CadastroUsuario(0);
+                    CadastroUsuario(1);
                     break;
                 case 2:  // cadastro de livro
                     System.out.println("Opção escolhida: " + op);
-                    CadastroLivro(0);
+                    CadastroLivro(1);
                     break;
                 case 3: //emprestimos
                     System.out.println("Opção escolhida: " + op);
@@ -186,7 +189,7 @@ public class Main {
         try { BookType = Integer.parseInt(br.readLine()); } catch(IOException e) { System.out.println("Erro no input do tipo de livro");}
 
         // crio um objeto livro das informaçõe do input
-        Book b = new Book(Title, Author, Publisher, Pages, BookType);
+        Book b = new Book(Title.toLowerCase(), Author.toLowerCase(), Publisher.toLowerCase(), Pages, BookType);
         System.out.println("As informações cadastradas foram: ");
         b.PrintInfo();
 
@@ -209,11 +212,13 @@ public class Main {
         //
         // construo dois arraylist, um vai conter os usuaŕios e o outro, os livros
         //
+
         List<Book> bookList = FileOperations.ReadBookCSV(filenameBook);
         List<User> userList = FileOperations.ReadUserCSV(filenameUser);
+        List<Loan> loanList = FileOperations.ReadLoanCSV(filenameLoan);
 
         Book tempBook = null; // book temporario
-        Book tempUser = null; // user temporario
+        User tempUser = null; // user temporario
 
         String s = null; // opção para mudar data atual
         String Title = null;// titulo do livro
@@ -224,10 +229,9 @@ public class Main {
 
         Date DateD = null; // data de devolução
         String SDateD = null; // string da data de devolução
+        System.out.println("Digite as informações de empréstimo: ");
 
         BufferedReader br = new BufferedReader(new InputStreamReader(System.in));
-
-        System.out.println("Digite as informações de empréstimo: ");
 
         // input do titulo
         while(true) {
@@ -235,13 +239,13 @@ public class Main {
             try { Title = br.readLine(); } catch(IOException e) { System.out.println("Erro no input do titulo"); continue; }
 
             //
-            // verifico se o usuaŕio está dentro da lista, se sim, pego/remove ele
+            // verifico se o titulo está dentro da lista, se sim, pego/remove ele
             //
-
             Boolean flag = false;
             // ando na lista verificando se ele existe
             for(Book e: bookList) {
-                if (e.getTitle().equalsIgnoreCase(Title)) { // encontrei
+                System.out.println(e.getTitle().toString());
+                if (e.getTitle().equals(Title)) { // encontrei
                     flag = true;
                     tempBook = e; // guardo o objeto
                     bookList.remove(e); // remove ele
@@ -251,7 +255,7 @@ public class Main {
 
             if (flag) {// encontrei as informações
                 System.out.println("Título encontrado: ");
-                tempBook.PrintInfo();
+                //tempBook.PrintInfo();
                 break;
             } else {
                 System.out.println("Título Não encontrado, digite novamente");
@@ -259,11 +263,35 @@ public class Main {
             }
         }
 
+        //
+        // recebo o usuario e procuro para ver se ele esta dentro da lista de usuarios
+        //
+        while(true) {
+            System.out.println("Digite o nome do usuário:");
+            try { UserName = br.readLine(); } catch(IOException e) { System.out.println("Erro no input do nome");}
 
-        //input do nome do usuário
-        System.out.println("Digite o nome do usuário:");
-        try { UserName = br.readLine(); } catch(IOException e) { System.out.println("Erro no input do nome");}
+            //
+            // verifico se o titulo esta dentro da lista, se sim, pego/remove el
+            //
+            Boolean flag = false;
+            //ando a lista verificando se ele existe
+            for(User u: userList) {
+                if (u.getName().equalsIgnoreCase(UserName)) {
+                    flag = true;
+                    tempUser = u;
+                    userList.remove(u);
+                    break;
+                }
+            }
 
+            if (flag) { //encontrei as informacoes
+                System.out.println("Usuario encontrado: ");
+                //tempUser.PrintInfo();
+                break;
+            } else {
+                System.out.println("Titulo nao encontrado, digite o nome do usuario novamente");
+            }
+        }
         // data da devolução (pode ser configurada no inicio do programa ou aqui)
         System.out.println("A Data Atual digitada no inicio do programa é:  " + DataAtual.toString());
 
@@ -287,10 +315,32 @@ public class Main {
         } else {
             DateI = DataAtual;
         }
+        DateD = new Date();
 
         //
         // chamamos a função que faz os empréstimos(grava em arquivo)
         //
+
+        // crio um objeto que faz o emprestimo e salva as informacos do input, chamos a funcao de escrita
+        Loan loan = new Loan(
+                tempBook, tempUser, DateI, DateD, 0, 0);
+
+        loanList.add(loan);
+
+        //
+        // salvo as listas nos arquivos correspodentes
+        //
+        for(Book b: bookList) {
+            FileOperations.SaveCSV(b.toCSV(), filenameBook, 0);
+        }
+
+        for(User u: userList) {
+            FileOperations.SaveCSV(u.toCSV(), filenameUser, 0);
+        }
+
+        for(Loan l: loanList) {
+            FileOperations.SaveCSV(l.toCSV(), filenameLoan, 0);
+        }
     }
 
     //
@@ -305,14 +355,12 @@ public class Main {
         BufferedReader br = new BufferedReader(new InputStreamReader(System.in));
 
         System.out.println("Digite as informações de devolução: ");
-        while(true) {
-
-            System.out.println("Digite o título:  ");
-            try { Title = br.readLine(); } catch(IOException e) { System.out.println("Erro no input do titulo");}
-
-
-
-        }
+//        while(true) {
+//
+//            System.out.println("Digite o título:  ");
+//            try { Title = br.readLine(); } catch(IOException e) { System.out.println("Erro no input do titulo");}
+//
+//        }
 
         System.out.println("Digite o nome do usuário :  ");
         try { UserName = br.readLine(); } catch(IOException e) { System.out.println("Erro no input do nome");

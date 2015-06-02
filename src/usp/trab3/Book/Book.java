@@ -66,7 +66,6 @@ public class Book {
         result.append(Pages);
         result.append(",");
         result.append(BookType);
-        result.append("\n");
 
         return result;
     }
@@ -94,5 +93,15 @@ public class Book {
     //
     public String getTitle() {
         return Title;
+    }
+
+    /**
+     * Metodo que verifica se o livro esta disponivel para emprestimo
+     */
+    public boolean loanStatus() {
+        if(StatusLoan==0)
+            return true;
+        else
+            return false;
     }
 }
